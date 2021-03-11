@@ -3,10 +3,10 @@
     public class Cpu
     {
         public string Series { get; set; }
-        public string Cores { get; set; }
-        public string Clock { get; set; }
+        public int Cores { get; set; }
+        public int Clock { get; set; }
 
-        public Cpu(string series, string cores, string clock)
+        public Cpu(string series, int cores, int clock)
         {
             Series = series;
             Cores = cores;
