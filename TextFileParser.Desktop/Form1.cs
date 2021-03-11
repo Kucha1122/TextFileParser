@@ -1,26 +1,27 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Data;
 using System.Drawing;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using TextFileParser.Helpers;
+using TextFileParser.Model;
 
 namespace TextFileParser.Desktop
 {
     public partial class Form1 : Form
     {
         private OpenFileDialog _openFileDialog;
+        private SaveFileDialog _saveFileDialog;
+        private List<Product> _products;
         private Parser _parser;
         private DataTable _table;
         public Form1()
         {
             InitializeComponent();
             _openFileDialog = new OpenFileDialog();
+            _saveFileDialog = new SaveFileDialog();
+            _products = new List<Product>();
             _parser = new Parser();
             _table = new DataTable();
         }
@@ -29,9 +30,9 @@ namespace TextFileParser.Desktop
         {
             _openFileDialog.ShowDialog();
             string filename = _openFileDialog.FileName;
-            var products = _parser.Parse(filename);
+            _products = _parser.Parse(filename);
 
-            foreach (var product in products)
+            foreach (var product in _products)
             {
                 if (_table.Rows.Contains(product.Id))
                 {
@@ -69,6 +70,24 @@ namespace TextFileParser.Desktop
             for(int i=1; i<tableHeaders.Length; i++)
             {
                 _table.Columns.Add(tableHeaders[i], typeof(string));
+            }
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            _saveFileDialog.Filter = "txt files (*.txt)|*.txt|All files (*.*)|*.*";
+            _saveFileDialog.FilterIndex = 2;
+            _saveFileDialog.RestoreDirectory = true;
+
+            if (_saveFileDialog.ShowDialog() == DialogResult.OK)
+            {
+                string filePath = _saveFileDialog.FileName;
+                StreamWriter sw = new StreamWriter(File.Create(filePath));
+                foreach (var line in _parser.ParseDataToFile(_products))
+                {
+                    sw.WriteLine(line);
+                }
+                sw.Close();
             }
         }
     }

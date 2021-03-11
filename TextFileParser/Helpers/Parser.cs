@@ -39,6 +39,21 @@ namespace TextFileParser.Helpers
             return products;
         }
 
+        public List<string> ParseDataToFile(List<Product> products)
+        {
+            List<string> dataFile = new();
+
+            foreach (var product in products)
+            {
+                dataFile.Add(product.Brand+";"+product.Screen.Size+";"+product.Screen.Resolution+";"
+                +product.Screen.Type+";"+product.Screen.Touch+";"+product.Cpu.Series+";"+product.Cpu.Cores+";"
+                +product.Cpu.Clock+";"+product.Ram+";"+product.Disk.Capacity+";"+product.Disk.Type+";"
+                +product.GraphicCard.Type+";"+product.GraphicCard.Vram+";"+product.OperatingSystem+";"+product.DriverType);
+            }
+
+            return dataFile;
+        }
+
         public void Display(List<Product> products)
         {
             var tableData = new List<List<object>>();
