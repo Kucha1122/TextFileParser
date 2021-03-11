@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.IO;
 using System.Linq;
 using ConsoleTableExt;
@@ -20,12 +21,15 @@ namespace TextFileParser.Helpers
             foreach (var line in lines)
             {
                 string[] col = line.Split(';');
+                int cores, clock;
+                Int32.TryParse(col[6], out cores);
+                Int32.TryParse(col[7], out clock);
                 var product = new Product
                 {
                     Id = id,
                     Brand = col[0],
                     Screen = new Screen(col[1], col[2], col[3], col[4]),
-                    Cpu = new Cpu(col[5], col[6], col[7]),
+                    Cpu = new Cpu(col[5], cores, clock),
                     Ram = col[8],
                     Disk = new Disk(col[9], col[10]),
                     GraphicCard = new GraphicCard(col[11], col[12]),
@@ -37,6 +41,20 @@ namespace TextFileParser.Helpers
             }
 
             return products;
+        }
+
+        public List<string> ParseDataToFile(DataTable dataTable)
+        {
+            List<string> dataFile = new();
+            foreach (DataRow row in dataTable.Rows)
+            {
+                dataFile.Add(row[1]+";"+row[2]+";"
+                             +row[3]+";"+row[4]+";"+row[5]+";"+row[6]+";"
+                             +row[7]+";"+row[8]+";"+row[9]+";"+row[10]+";"
+                             +row[11]+";"+row[12]+";"+row[13]+";"+row[15]);
+            }
+
+            return dataFile;
         }
 
         public List<string> ParseDataToFile(List<Product> products)
