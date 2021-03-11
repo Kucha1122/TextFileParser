@@ -75,6 +75,7 @@
             this.productTable.Name = "productTable";
             this.productTable.Size = new System.Drawing.Size(1415, 550);
             this.productTable.TabIndex = 2;
+            this.productTable.DataError += new System.Windows.Forms.DataGridViewDataErrorEventHandler(this.productTable_DataError);
             // 
             // Form1
             // 
@@ -84,6 +85,8 @@
             this.ClientSize = new System.Drawing.Size(1444, 761);
             this.Controls.Add(this.productTable);
             this.Controls.Add(this.groupBox1);
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
+            this.MaximizeBox = false;
             this.Name = "Form1";
             this.Text = "Integracja Systemów - Michał Kuśpit";
             this.Load += new System.EventHandler(this.Form1_Load);

@@ -65,11 +65,19 @@ namespace TextFileParser.Desktop
             };
             
             _table.Columns.Add(tableHeaders[0], typeof(int));
+            _table.Columns[0].ReadOnly = true;
             _table.PrimaryKey = new DataColumn[] { _table.Columns["Id"] };
             
             for(int i=1; i<tableHeaders.Length; i++)
             {
-                _table.Columns.Add(tableHeaders[i], typeof(string));
+                if (i == 7 || i == 8)
+                {
+                    _table.Columns.Add(tableHeaders[i], typeof(int));
+                }
+                else
+                {
+                    _table.Columns.Add(tableHeaders[i], typeof(string));
+                }
             }
         }
 
@@ -83,12 +91,23 @@ namespace TextFileParser.Desktop
             {
                 string filePath = _saveFileDialog.FileName;
                 StreamWriter sw = new StreamWriter(File.Create(filePath));
-                foreach (var line in _parser.ParseDataToFile(_products))
+                foreach (var line in _parser.ParseDataToFile(_table))
                 {
                     sw.WriteLine(line);
                 }
                 sw.Close();
             }
+        }
+
+        private void productTable_DataError(object sender, DataGridViewDataErrorEventArgs e)
+        {
+            e.ThrowException = false;
+            string errorMessage = "Error in a column [" +
+                         productTable.Columns[e.ColumnIndex].HeaderText +
+                         "]\n\n" + "Please input correct data";
+            MessageBox.Show(errorMessage, "Error",
+                MessageBoxButtons.OK, MessageBoxIcon.Error);
+            e.Cancel = false;
         }
     }
 }
