@@ -72,18 +72,20 @@
             this.productTable.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.productTable.Location = new System.Drawing.Point(12, 76);
             this.productTable.Name = "productTable";
-            this.productTable.Size = new System.Drawing.Size(776, 362);
+            this.productTable.Size = new System.Drawing.Size(1415, 550);
             this.productTable.TabIndex = 2;
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(800, 450);
+            this.BackColor = System.Drawing.SystemColors.ControlLightLight;
+            this.ClientSize = new System.Drawing.Size(1444, 761);
             this.Controls.Add(this.productTable);
             this.Controls.Add(this.groupBox1);
             this.Name = "Form1";
             this.Text = "Integracja Systemów - Michał Kuśpit";
+            this.Load += new System.EventHandler(this.Form1_Load);
             this.groupBox1.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize) (this.productTable)).EndInit();
             this.ResumeLayout(false);
