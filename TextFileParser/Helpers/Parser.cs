@@ -10,6 +10,7 @@ namespace TextFileParser.Helpers
 {
     public class Parser : IParser
     {
+        private int id = 0;
         public List<Product> Parse(string filePath)
         {
             List <Product> products = new();
@@ -17,7 +18,6 @@ namespace TextFileParser.Helpers
                 throw new Exception("File does not exist!");
             
             List<string> lines = File.ReadAllLines(filePath).ToList();
-            int id = 0;
             foreach (var line in lines)
             {
                 string[] col = line.Split(';');
@@ -51,7 +51,7 @@ namespace TextFileParser.Helpers
                 dataFile.Add(row[1]+";"+row[2]+";"
                              +row[3]+";"+row[4]+";"+row[5]+";"+row[6]+";"
                              +row[7]+";"+row[8]+";"+row[9]+";"+row[10]+";"
-                             +row[11]+";"+row[12]+";"+row[13]+";"+row[15]);
+                             +row[11]+";"+row[12]+";"+row[13]+";"+row[14]+";"+row[15]);
             }
 
             return dataFile;
@@ -123,6 +123,26 @@ namespace TextFileParser.Helpers
             {
                 Console.WriteLine(brand.Name+": "+brand.Availablity);
             }
+        }
+
+        public List<Brand> GetBrandAvailability(List<Product> products)
+        {
+            List<Brand> brands = new();
+
+            foreach (var product in products)
+            {
+                var brand = brands.SingleOrDefault(x => x.Name == product.Brand);
+                if (brand != null)
+                {
+                    brand.Availablity++;
+                }
+                else
+                {
+                    brands.Add(new Brand(product.Brand, 1));
+                }
+            }
+
+            return brands;
         }
     }
 }

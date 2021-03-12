@@ -46,13 +46,21 @@ namespace TextFileParser.Desktop
             }
 
             productTable.DataSource = _table;
-            productTable.Width = 0;
+            messageLabel.Text = $"{_products.Count} rows loaded from a file";
+            messageLabel.ForeColor = Color.Green;
+            /*productTable.Width = 0;
             productTable.Height = 0;
-            productTable.AutoSize = true;
+            productTable.AutoSize = true;*/
+            productTable.ScrollBars = ScrollBars.Both;
             productTable.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.AllCells;
             productTable.AutoSizeRowsMode = DataGridViewAutoSizeRowsMode.AllCells;
             productTable.BackgroundColor = SystemColors.ControlLightLight;
             productTable.BorderStyle = BorderStyle.None;
+
+            foreach (var brand in _parser.GetBrandAvailability(_products))
+            {
+                listBox1.Items.Add(brand.Name+": "+brand.Availablity);
+            }
         }
 
         private void Form1_Load(object sender, EventArgs e)
@@ -64,8 +72,11 @@ namespace TextFileParser.Desktop
                 "Rodzaj dysku", "GPU", "Ilość VRAM", "Systemu operacyjny", "Napęd"
             };
             
-            _table.Columns.Add(tableHeaders[0], typeof(int));
+            _table.Columns.Add(tableHeaders[0], typeof(Int32));
             _table.Columns[0].ReadOnly = true;
+            _table.Columns[0].AutoIncrement = true;  
+            _table.Columns[0].AutoIncrementSeed = 1;  
+            _table.Columns[0].AutoIncrementStep = 1;  
             _table.PrimaryKey = new DataColumn[] { _table.Columns["Id"] };
             
             for(int i=1; i<tableHeaders.Length; i++)
@@ -83,7 +94,7 @@ namespace TextFileParser.Desktop
 
         private void button2_Click(object sender, EventArgs e)
         {
-            _saveFileDialog.Filter = "txt files (*.txt)|*.txt|All files (*.*)|*.*";
+            _saveFileDialog.Filter = "Txt files (*.txt)|*.txt|All files (*.*)|*.*";
             _saveFileDialog.FilterIndex = 2;
             _saveFileDialog.RestoreDirectory = true;
 
@@ -95,6 +106,9 @@ namespace TextFileParser.Desktop
                 {
                     sw.WriteLine(line);
                 }
+
+                messageLabel.Text = "All rows have been saved in a file";
+                messageLabel.ForeColor = Color.Green;
                 sw.Close();
             }
         }
