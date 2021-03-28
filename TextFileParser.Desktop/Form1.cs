@@ -57,6 +57,7 @@ namespace TextFileParser.Desktop
             productTable.BackgroundColor = SystemColors.ControlLightLight;
             productTable.BorderStyle = BorderStyle.None;
 
+            listBox1.Items.Clear();
             foreach (var brand in _parser.GetBrandAvailability(_products))
             {
                 listBox1.Items.Add(brand.Name+": "+brand.Availablity);
@@ -94,7 +95,7 @@ namespace TextFileParser.Desktop
 
         private void button2_Click(object sender, EventArgs e)
         {
-            _saveFileDialog.Filter = "Txt files (*.txt)|*.txt|All files (*.*)|*.*";
+            _saveFileDialog.Filter = @"Txt files (*.txt)|*.txt|All files (*.*)|*.*";
             _saveFileDialog.FilterIndex = 2;
             _saveFileDialog.RestoreDirectory = true;
 
@@ -107,7 +108,7 @@ namespace TextFileParser.Desktop
                     sw.WriteLine(line);
                 }
 
-                messageLabel.Text = "All rows have been saved in a file";
+                messageLabel.Text = @"All rows have been saved in a file";
                 messageLabel.ForeColor = Color.Green;
                 sw.Close();
             }
@@ -119,9 +120,78 @@ namespace TextFileParser.Desktop
             string errorMessage = "Error in a column [" +
                          productTable.Columns[e.ColumnIndex].HeaderText +
                          "]\n\n" + "Please input correct data";
-            MessageBox.Show(errorMessage, "Error",
+            MessageBox.Show(errorMessage, @"Error",
                 MessageBoxButtons.OK, MessageBoxIcon.Error);
             e.Cancel = false;
+        }
+
+        private void button3_Click(object sender, EventArgs e)
+        {
+            OpenFileDialog openXmlFileDialog = new OpenFileDialog();
+            openXmlFileDialog.Filter = "XML Files (*.xml)|*.xml";
+            openXmlFileDialog.FilterIndex = 0;
+            openXmlFileDialog.DefaultExt = "xml";
+            if (openXmlFileDialog.ShowDialog() == DialogResult.OK)
+            {
+                if (!String.Equals(Path.GetExtension(openXmlFileDialog.FileName), ".xml",
+                    StringComparison.OrdinalIgnoreCase))
+                {
+                    MessageBox.Show("Wrong file type, please select XML File.","Invalid File Type",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Error);
+                }
+                else
+                {
+                    _products = _parser.ParseXmlFile(openXmlFileDialog.FileName);
+                    foreach (var product in _products)
+                    {
+                        if (_table.Rows.Contains(product.Id))
+                        {
+                            continue;
+                        }
+                        _table.Rows.Add(product.Id, product.Brand, product.Screen.Size, product.Screen.Resolution,
+                            product.Screen.Type, product.Screen.Touch, product.Cpu.Series, product.Cpu.Cores, product.Cpu.Clock,
+                            product.Ram, product.Disk.Capacity, product.Disk.Type, product.GraphicCard.Type,
+                            product.GraphicCard.Vram,
+                            product.OperatingSystem, product.DriverType);
+                    }
+
+                    productTable.DataSource = _table;
+                    messageLabel.Text = $"{_products.Count} rows loaded from a file";
+                    messageLabel.ForeColor = Color.Green;
+                    /*productTable.Width = 0;
+                    productTable.Height = 0;
+                    productTable.AutoSize = true;*/
+                    productTable.ScrollBars = ScrollBars.Both;
+                    productTable.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.AllCells;
+                    productTable.AutoSizeRowsMode = DataGridViewAutoSizeRowsMode.AllCells;
+                    productTable.BackgroundColor = SystemColors.ControlLightLight;
+                    productTable.BorderStyle = BorderStyle.None;
+
+                    listBox1.Items.Clear();
+                    foreach (var brand in _parser.GetBrandAvailability(_products))
+                    {
+                        listBox1.Items.Add(brand.Name+": "+brand.Availablity);
+                    }
+                }
+            }
+        }
+
+        private void button1_Click_1(object sender, EventArgs e)
+        {
+            SaveFileDialog saveXmlFileDialog = new SaveFileDialog();
+            saveXmlFileDialog.Filter = "XML Files (*.xml)|*.xml";
+            saveXmlFileDialog.FilterIndex = 0;
+            saveXmlFileDialog.DefaultExt = "xml";
+
+            if (saveXmlFileDialog.ShowDialog() == DialogResult.OK)
+            {
+                string filePath = saveXmlFileDialog.FileName;
+                _parser.WriteXmlFile(filePath, _table);
+
+                messageLabel.Text = @"All rows have been saved in a file";
+                messageLabel.ForeColor = Color.Green;
+            }
         }
     }
 }

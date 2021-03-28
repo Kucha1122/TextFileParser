@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Linq;
+using System.Xml;
 using ConsoleTableExt;
 using TextFileParser.Model;
 
@@ -10,12 +11,17 @@ namespace TextFileParser.Helpers
 {
     public class Parser : IParser
     {
-        private int id = 0;
+        private int Id { get; set; }
+        public List<Product> Products { get; set; }
+
+        public Parser()
+        {
+            Products = new List<Product>();
+            Id = 0;
+        }
         public List<Product> Parse(string filePath)
         {
-            List <Product> products = new();
-            if (!File.Exists(filePath))
-                throw new Exception("File does not exist!");
+            Id = Products.Count + 1;
             
             List<string> lines = File.ReadAllLines(filePath).ToList();
             foreach (var line in lines)
@@ -26,7 +32,7 @@ namespace TextFileParser.Helpers
                 Int32.TryParse(col[7], out clock);
                 var product = new Product
                 {
-                    Id = id,
+                    Id = Id,
                     Brand = col[0],
                     Screen = new Screen(col[1], col[2], col[3], col[4]),
                     Cpu = new Cpu(col[5], cores, clock),
@@ -36,11 +42,11 @@ namespace TextFileParser.Helpers
                     OperatingSystem = col[13],
                     DriverType = col[14]
                 };
-                id++;
-                products.Add(product);
+                Id++;
+                Products.Add(product);
             }
 
-            return products;
+            return Products;
         }
 
         public List<string> ParseDataToFile(DataTable dataTable)
@@ -55,6 +61,81 @@ namespace TextFileParser.Helpers
             }
 
             return dataFile;
+        }
+
+        public List<Product> ParseXmlFile(string filePath)
+        {
+            XmlDocument document = new XmlDocument();
+            document.Load(filePath);
+
+            foreach (XmlNode node in document.SelectNodes("laptops/laptop"))
+            {
+                int cores, clock;
+                string diskType;
+                if (node.ChildNodes[4].Attributes.Count == 0)
+                {
+                    diskType = "";
+                }
+                else
+                {
+                    diskType = node.ChildNodes[4].Attributes[0].Value;
+                }
+                Int32.TryParse(node.ChildNodes[2].ChildNodes[1].InnerText, out cores);
+                Int32.TryParse(node.ChildNodes[2].ChildNodes[2].InnerText, out clock);
+                var product = new Product
+                {
+                    Id = int.Parse(node.Attributes[0].Value),
+                    Brand = node.ChildNodes[0].InnerText,
+                    Screen = new Screen(node.ChildNodes[1].ChildNodes[0].InnerText, node.ChildNodes[1].ChildNodes[1].InnerText, node.ChildNodes[1].ChildNodes[2].InnerText, node.ChildNodes[1].Attributes[0].Value),
+                    Cpu = new Cpu(node.ChildNodes[2].ChildNodes[0].InnerText, cores, clock),
+                    Ram = node.ChildNodes[3].InnerText,
+                    Disk = new Disk(node.ChildNodes[4].ChildNodes[0].InnerText, diskType),
+                    GraphicCard = new GraphicCard(node.ChildNodes[5].ChildNodes[0].InnerText, node.ChildNodes[5].ChildNodes[1].InnerText),
+                    OperatingSystem = node.ChildNodes[6].InnerText,
+                    DriverType = node.ChildNodes[7].InnerText
+                };
+                Products.Add(product);
+            }
+
+            return Products;
+        }
+
+        public void WriteXmlFile(string filePath, DataTable dataTable)
+        {
+            using (XmlWriter xmlW = XmlWriter.Create(filePath))
+                {
+                    xmlW.WriteStartElement("laptops");
+                    foreach (DataRow row in dataTable.Rows)
+                    {
+                        xmlW.WriteStartElement("laptop");
+                        xmlW.WriteAttributeString("id", row[0].ToString());
+                        xmlW.WriteElementString("manufacturer", row[1].ToString());
+                        xmlW.WriteStartElement("screen");
+                        xmlW.WriteAttributeString("touch", row[5].ToString());
+                        xmlW.WriteElementString("size", row[2].ToString());
+                        xmlW.WriteElementString("resolution", row[3].ToString());
+                        xmlW.WriteElementString("type", row[4].ToString());
+                        xmlW.WriteEndElement();
+                        xmlW.WriteStartElement("processor");
+                        xmlW.WriteElementString("name", row[6].ToString());
+                        xmlW.WriteElementString("physical_cores", row[7].ToString());
+                        xmlW.WriteElementString("clock_speed", row[8].ToString());
+                        xmlW.WriteEndElement();
+                        xmlW.WriteElementString("ram", row[9].ToString());
+                        xmlW.WriteStartElement("disc");
+                        xmlW.WriteAttributeString("type", row[11].ToString());
+                        xmlW.WriteElementString("storage", row[10].ToString());
+                        xmlW.WriteEndElement();
+                        xmlW.WriteStartElement("graphic_card");
+                        xmlW.WriteElementString("name", row[12].ToString());
+                        xmlW.WriteElementString("memory", row[13].ToString());
+                        xmlW.WriteEndElement();
+                        xmlW.WriteElementString("os", row[14].ToString());
+                        xmlW.WriteElementString("disc_reader", row[15].ToString());
+                        xmlW.WriteEndElement();
+                    }
+                    xmlW.Close();
+                }
         }
 
         public List<string> ParseDataToFile(List<Product> products)
