@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.SqlClient;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Xml;
 using ConsoleTableExt;
 using TextFileParser.Model;
@@ -13,6 +15,7 @@ namespace TextFileParser.Helpers
     {
         private int Id { get; set; }
         public List<Product> Products { get; set; }
+        public List<string> DupRows { get; set; }
 
         public Parser()
         {
@@ -72,6 +75,10 @@ namespace TextFileParser.Helpers
             {
                 int cores, clock;
                 string diskType;
+                var touchMap = new Dictionary<string, string>();
+                touchMap.Add("no", "nie");
+                touchMap.Add("yes", "tak");
+                touchMap.Add("", node.ChildNodes[1].Attributes[0].Value);
                 if (node.ChildNodes[4].Attributes.Count == 0)
                 {
                     diskType = "";
@@ -80,19 +87,20 @@ namespace TextFileParser.Helpers
                 {
                     diskType = node.ChildNodes[4].Attributes[0].Value;
                 }
-                Int32.TryParse(node.ChildNodes[2].ChildNodes[1].InnerText, out cores);
-                Int32.TryParse(node.ChildNodes[2].ChildNodes[2].InnerText, out clock);
+                Int32.TryParse(node.ChildNodes[2]?.ChildNodes[1]?.InnerText, out cores);
+                Int32.TryParse(node.ChildNodes[2]?.ChildNodes[2]?.InnerText, out clock);
+
                 var product = new Product
                 {
                     Id = int.Parse(node.Attributes[0].Value),
-                    Brand = node.ChildNodes[0].InnerText,
-                    Screen = new Screen(node.ChildNodes[1].ChildNodes[0].InnerText, node.ChildNodes[1].ChildNodes[1].InnerText, node.ChildNodes[1].ChildNodes[2].InnerText, node.ChildNodes[1].Attributes[0].Value),
-                    Cpu = new Cpu(node.ChildNodes[2].ChildNodes[0].InnerText, cores, clock),
-                    Ram = node.ChildNodes[3].InnerText,
-                    Disk = new Disk(node.ChildNodes[4].ChildNodes[0].InnerText, diskType),
-                    GraphicCard = new GraphicCard(node.ChildNodes[5].ChildNodes[0].InnerText, node.ChildNodes[5].ChildNodes[1].InnerText),
-                    OperatingSystem = node.ChildNodes[6].InnerText,
-                    DriverType = node.ChildNodes[7].InnerText
+                    Brand = node.ChildNodes[0]?.InnerText,
+                    Screen = new Screen(node.ChildNodes[1]?.ChildNodes[0]?.InnerText, node.ChildNodes[1]?.ChildNodes[1]?.InnerText, node.ChildNodes[1]?.ChildNodes[2]?.InnerText, touchMap[node.ChildNodes[1].Attributes[0].Value]),
+                    Cpu = new Cpu(node.ChildNodes[2]?.ChildNodes[0]?.InnerText, cores, clock),
+                    Ram = node.ChildNodes[3]?.InnerText,
+                    Disk = new Disk(node.ChildNodes[4].ChildNodes[0]?.InnerText, diskType),
+                    GraphicCard = new GraphicCard(node.ChildNodes[5]?.ChildNodes[0]?.InnerText, node.ChildNodes[5]?.ChildNodes[1]?.InnerText),
+                    OperatingSystem = node.ChildNodes[6]?.InnerText,
+                    DriverType = node.ChildNodes[7]?.InnerText
                 };
                 Products.Add(product);
             }
@@ -102,40 +110,43 @@ namespace TextFileParser.Helpers
 
         public void WriteXmlFile(string filePath, DataTable dataTable)
         {
+            var touchMap = new Dictionary<string, string>();
+            touchMap.Add("nie", "no");
+            touchMap.Add("tak", "yes");
             using (XmlWriter xmlW = XmlWriter.Create(filePath))
+            {
+                xmlW.WriteStartElement("laptops");
+                foreach (DataRow row in dataTable.Rows)
                 {
-                    xmlW.WriteStartElement("laptops");
-                    foreach (DataRow row in dataTable.Rows)
-                    {
-                        xmlW.WriteStartElement("laptop");
-                        xmlW.WriteAttributeString("id", row[0].ToString());
-                        xmlW.WriteElementString("manufacturer", row[1].ToString());
-                        xmlW.WriteStartElement("screen");
-                        xmlW.WriteAttributeString("touch", row[5].ToString());
-                        xmlW.WriteElementString("size", row[2].ToString());
-                        xmlW.WriteElementString("resolution", row[3].ToString());
-                        xmlW.WriteElementString("type", row[4].ToString());
-                        xmlW.WriteEndElement();
-                        xmlW.WriteStartElement("processor");
-                        xmlW.WriteElementString("name", row[6].ToString());
-                        xmlW.WriteElementString("physical_cores", row[7].ToString());
-                        xmlW.WriteElementString("clock_speed", row[8].ToString());
-                        xmlW.WriteEndElement();
-                        xmlW.WriteElementString("ram", row[9].ToString());
-                        xmlW.WriteStartElement("disc");
-                        xmlW.WriteAttributeString("type", row[11].ToString());
-                        xmlW.WriteElementString("storage", row[10].ToString());
-                        xmlW.WriteEndElement();
-                        xmlW.WriteStartElement("graphic_card");
-                        xmlW.WriteElementString("name", row[12].ToString());
-                        xmlW.WriteElementString("memory", row[13].ToString());
-                        xmlW.WriteEndElement();
-                        xmlW.WriteElementString("os", row[14].ToString());
-                        xmlW.WriteElementString("disc_reader", row[15].ToString());
-                        xmlW.WriteEndElement();
-                    }
-                    xmlW.Close();
+                    xmlW.WriteStartElement("laptop");
+                    xmlW.WriteAttributeString("id", row[0].ToString());
+                    xmlW.WriteElementString("manufacturer", row[1].ToString());
+                    xmlW.WriteStartElement("screen");
+                    xmlW.WriteAttributeString("touch", touchMap[row[5].ToString()]);
+                    xmlW.WriteElementString("size", row[2].ToString());
+                    xmlW.WriteElementString("resolution", row[3].ToString());
+                    xmlW.WriteElementString("type", row[4].ToString());
+                    xmlW.WriteEndElement();
+                    xmlW.WriteStartElement("processor");
+                    xmlW.WriteElementString("name", row[6].ToString());
+                    xmlW.WriteElementString("physical_cores", row[7].ToString());
+                    xmlW.WriteElementString("clock_speed", row[8].ToString());
+                    xmlW.WriteEndElement();
+                    xmlW.WriteElementString("ram", row[9].ToString());
+                    xmlW.WriteStartElement("disc");
+                    xmlW.WriteAttributeString("type", row[11].ToString());
+                    xmlW.WriteElementString("storage", row[10].ToString());
+                    xmlW.WriteEndElement();
+                    xmlW.WriteStartElement("graphic_card");
+                    xmlW.WriteElementString("name", row[12].ToString());
+                    xmlW.WriteElementString("memory", row[13].ToString());
+                    xmlW.WriteEndElement();
+                    xmlW.WriteElementString("os", row[14].ToString());
+                    xmlW.WriteElementString("disc_reader", row[15].ToString());
+                    xmlW.WriteEndElement();
                 }
+                xmlW.Close();
+            }
         }
 
         public List<string> ParseDataToFile(List<Product> products)
@@ -224,6 +235,75 @@ namespace TextFileParser.Helpers
             }
 
             return brands;
+        }
+
+        public void InsertDataToDb(DataTable dataTable)
+        {
+            string _connectionString = "Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=TextFileParserDB;MultipleActiveResultSets=true";
+            SqlConnection con = new SqlConnection(_connectionString);
+            con.Open();
+            SqlCommand cmd;
+            SqlDataAdapter adapter = new SqlDataAdapter();
+            String sql = "";
+            
+            foreach (DataRow row in dataTable.Rows)
+            {
+                try
+                {
+                    sql = @"INSERT INTO Products(Id, BrandName, ScreenSize, ScreenResolution, ScreenType, ScreenTouch,
+                    CpuSeries, CpuCores, CpuClock, Ram, DiskCapacity, DiskType, GpuType, GpuVram, OperatingSystem, DriverType)
+                    values('" + row[0] + "', '" + row[1] + "', '" + row[2] + "', '" + row[3] + "', '" + row[4] +
+                          "', '" + row[5] + "', '" + row[6] + "', '" + row[7] + "', '" + row[8] + "', '" + row[9] +
+                          "', '" +
+                          row[10] + "', '" + row[11] + "', '" + row[12] + "', '" + row[13] + "', '" + row[14] + "', '" +
+                          row[15] + "')";
+
+                    cmd = new SqlCommand(sql, con);
+                    adapter.InsertCommand = new SqlCommand(sql, con);
+                    adapter.InsertCommand.ExecuteNonQuery();
+                    cmd.Dispose();
+                }
+                catch (Exception)
+                {
+                    Console.WriteLine("Same row");
+                }
+            }
+            con.Close();
+        }
+
+        public List<Product> SelectDataFromDb()
+        {
+            var prod = new List<Product>();
+            string _connectionString = "Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=TextFileParserDB;MultipleActiveResultSets=true";
+            SqlConnection con = new SqlConnection(_connectionString);
+            con.Open();
+            SqlCommand cmd;
+            SqlDataReader dataReader;
+            String sql = @"SELECT Id, BrandName, ScreenSize, ScreenResolution, ScreenType, ScreenTouch,
+            CpuSeries, CpuCores, CpuClock, Ram, DiskCapacity, DiskType, GpuType, GpuVram, OperatingSystem, DriverType FROM Products";
+            cmd = new SqlCommand(sql, con);
+            dataReader = cmd.ExecuteReader();
+
+            while (dataReader.Read())
+            {
+                var product = new Product
+                {
+                    Id = int.Parse(dataReader.GetValue(0).ToString()),
+                    Brand = dataReader.GetValue(1).ToString(),
+                    Screen = new Screen(dataReader.GetValue(2).ToString(), dataReader.GetValue(3).ToString(), dataReader.GetValue(4).ToString(), dataReader.GetValue(5).ToString()),
+                    Cpu = new Cpu(dataReader.GetValue(6).ToString(), int.Parse(dataReader.GetValue(7).ToString()), int.Parse(dataReader.GetValue(8).ToString())),
+                    Ram = dataReader.GetValue(9).ToString(),
+                    Disk = new Disk(dataReader.GetValue(10).ToString(), dataReader.GetValue(11).ToString()),
+                    GraphicCard = new GraphicCard(dataReader.GetValue(12).ToString(), dataReader.GetValue(13).ToString()),
+                    OperatingSystem = dataReader.GetValue(14).ToString(),
+                    DriverType = dataReader.GetValue(15).ToString()
+                };
+                prod.Add(product);
+                cmd.Dispose();
+            }
+            
+            con.Close();
+            return prod;
         }
     }
 }

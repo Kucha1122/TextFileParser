@@ -24,6 +24,8 @@ namespace TextFileParser.Desktop
             _products = new List<Product>();
             _parser = new Parser();
             _table = new DataTable();
+            //productTable.Rows[e.RowIndex].DefaultCellStyle.BackColor = Color.LightGray;
+            productTable.RowsDefaultCellStyle.BackColor = Color.LightGray;
         }
         
         private void button1_Click(object sender, EventArgs e)
@@ -36,6 +38,7 @@ namespace TextFileParser.Desktop
             {
                 if (_table.Rows.Contains(product.Id))
                 {
+                    productTable.Rows[product.Id-1].DefaultCellStyle.BackColor = Color.Red;
                     continue;
                 }
                 _table.Rows.Add(product.Id, product.Brand, product.Screen.Size, product.Screen.Resolution,
@@ -48,9 +51,6 @@ namespace TextFileParser.Desktop
             productTable.DataSource = _table;
             messageLabel.Text = $"{_products.Count} rows loaded from a file";
             messageLabel.ForeColor = Color.Green;
-            /*productTable.Width = 0;
-            productTable.Height = 0;
-            productTable.AutoSize = true;*/
             productTable.ScrollBars = ScrollBars.Both;
             productTable.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.AllCells;
             productTable.AutoSizeRowsMode = DataGridViewAutoSizeRowsMode.AllCells;
@@ -147,6 +147,7 @@ namespace TextFileParser.Desktop
                     {
                         if (_table.Rows.Contains(product.Id))
                         {
+                            productTable.Rows[product.Id-1].DefaultCellStyle.BackColor = Color.Red;
                             continue;
                         }
                         _table.Rows.Add(product.Id, product.Brand, product.Screen.Size, product.Screen.Resolution,
@@ -159,9 +160,6 @@ namespace TextFileParser.Desktop
                     productTable.DataSource = _table;
                     messageLabel.Text = $"{_products.Count} rows loaded from a file";
                     messageLabel.ForeColor = Color.Green;
-                    /*productTable.Width = 0;
-                    productTable.Height = 0;
-                    productTable.AutoSize = true;*/
                     productTable.ScrollBars = ScrollBars.Both;
                     productTable.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.AllCells;
                     productTable.AutoSizeRowsMode = DataGridViewAutoSizeRowsMode.AllCells;
@@ -192,6 +190,64 @@ namespace TextFileParser.Desktop
                 messageLabel.Text = @"All rows have been saved in a file";
                 messageLabel.ForeColor = Color.Green;
             }
+        }
+
+        private void button4_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                _parser.InsertDataToDb(_table);
+                MessageBox.Show("All rows have been saved.");
+            }
+            catch (Exception)
+            {
+                MessageBox.Show("DB Connection Error");
+            }
+        }
+
+        private void button5_Click(object sender, EventArgs e)
+        {
+            var prod = _parser.SelectDataFromDb();
+            _products.AddRange(prod);
+            int newRecords = 0;
+            foreach (var product in prod)
+            {
+                if (_table.Rows.Contains(product.Id))
+                {
+                    productTable.Rows[product.Id-1].DefaultCellStyle.BackColor = Color.Red;
+                    continue;
+                }
+
+
+                newRecords++;
+                _table.Rows.Add(product.Id, product.Brand, product.Screen.Size, product.Screen.Resolution,
+                    product.Screen.Type, product.Screen.Touch, product.Cpu.Series, product.Cpu.Cores, product.Cpu.Clock,
+                    product.Ram, product.Disk.Capacity, product.Disk.Type, product.GraphicCard.Type,
+                    product.GraphicCard.Vram,
+                    product.OperatingSystem, product.DriverType);
+            }
+
+            productTable.DataSource = _table;
+            messageLabel.Text = $"{prod.Count} rows loaded from a db({prod.Count - newRecords} duplicates, {newRecords} new records)";
+            messageLabel.ForeColor = Color.Green;
+            productTable.ScrollBars = ScrollBars.Both;
+            productTable.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.AllCells;
+            productTable.AutoSizeRowsMode = DataGridViewAutoSizeRowsMode.AllCells;
+            productTable.BackgroundColor = SystemColors.ControlLightLight;
+            productTable.BorderStyle = BorderStyle.None;
+
+
+            listBox1.Items.Clear();
+            foreach (var brand in _parser.GetBrandAvailability(_products))
+            {
+                listBox1.Items.Add(brand.Name+": "+brand.Availablity);
+            }
+            productTable.BeginEdit(false);
+        }
+        
+        private void productTable_CellValueChanged(object sender, DataGridViewCellEventArgs e)
+        {
+            productTable.Rows[e.RowIndex].DefaultCellStyle.BackColor = Color.White;
         }
     }
 }
